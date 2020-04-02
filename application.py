@@ -19,9 +19,9 @@ import sqlalchemy as db
 
 import constants
 
-# from plaid import Client
-# from plaid.errors import ItemError
-# from plaid_methods.methods import get_accounts, get_transactions, token_exchange
+from plaid import Client
+from plaid.errors import ItemError
+from plaid_methods.methods import get_accounts, get_transactions, token_exchange
 
 # Load ENV_FILE
 ENV_FILE = find_dotenv()
@@ -43,13 +43,14 @@ ENV_VARS = {
     "PLAID_ENV": env.get(constants.PLAID_ENV)
 }
 
+
 # setup plaid client
-# client = Client(
-#     ENV_VARS["PLAID_CLIENT_ID"],
-#     ENV_VARS["PLAID_SECRET"],
-#     ENV_VARS["PLAID_PUBLIC_KEY"],
-#     ENV_VARS["PLAID_ENV"],
-# )
+client = Client(
+    ENV_VARS["PLAID_CLIENT_ID"],
+    ENV_VARS["PLAID_SECRET"],
+    ENV_VARS["PLAID_PUBLIC_KEY"],
+    ENV_VARS["PLAID_ENV"],
+)
 
 # setup application
 application = Flask(__name__, static_url_path='/public', static_folder='./public')
@@ -195,26 +196,33 @@ def dashboard() -> render_template:
     # show user info
     return render_template('dashboard.html',
                            userinfo=user_info[0],
-                           userinfo_pretty=user_info_pretty_str)
+                           userinfo_pretty=user_info_pretty_str,
+                           plaid_public_key=client.public_key,
+                           plaid_environment=client.environment,
+                           plaid_products=ENV_VARS.get("PLAID_PRODUCTS", "transactions"),
+                           plaid_country_codes=ENV_VARS.get("PLAID_COUNTRY_CODES", "US"),
+                           )
 
 
-# @application.route("/access_token", methods=["POST"])
-# def access_token():
-#     public_token = request.form["public_token"]
-#     try:
-#         response = token_exchange(client, public_token)
-#         print('response: ', response)
-#     except ItemError as e:
-#         outstring = f"Failure: {e.code}"
-#         print(outstring)
-#         return outstring
-#     return render_template(
-#         "dashboard.html",
-#         plaid_public_key=client.public_key,
-#         plaid_environment=client.environment,
-#         plaid_products=ENV_VARS.get("PLAID_PRODUCTS", "transactions"),
-#         plaid_country_codes=ENV_VARS.get("PLAID_COUNTRY_CODES", "US"),
-#     )
+@application.route("/access_token", methods=["POST"])
+def access_token():
+    public_token = request.form["public_token"]
+    try:
+        response = token_exchange(client, public_token)
+        print('response: ', response)
+
+        # TODO: store the response into our database
+
+    except ItemError as e:
+        outstring = f"Failure: {e.code}"
+        print(outstring)
+        return outstring
+    return render_template('dashboard.html',
+                           plaid_public_key=client.public_key,
+                           plaid_environment=client.environment,
+                           plaid_products=ENV_VARS.get("PLAID_PRODUCTS", "transactions"),
+                           plaid_country_codes=ENV_VARS.get("PLAID_COUNTRY_CODES", "US"),
+                           )
 
 
 if __name__ == "__main__":
