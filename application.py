@@ -12,22 +12,46 @@ from flask import redirect
 from flask import render_template
 from flask import session
 from flask import url_for
+from flask import request
 from authlib.flask.client import OAuth
 from six.moves.urllib.parse import urlencode
+import sqlalchemy as db
 
 import constants
 
+# from plaid import Client
+# from plaid.errors import ItemError
+# from plaid_methods.methods import get_accounts, get_transactions, token_exchange
+
+# Load ENV_FILE
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
+# env.get
+DB_PASSWORD = env.get(constants.DB_PASSWORD)
 AUTH0_CALLBACK_URL = env.get(constants.AUTH0_CALLBACK_URL)
 AUTH0_CLIENT_ID = env.get(constants.AUTH0_CLIENT_ID)
 AUTH0_CLIENT_SECRET = env.get(constants.AUTH0_CLIENT_SECRET)
 AUTH0_DOMAIN = env.get(constants.AUTH0_DOMAIN)
 AUTH0_BASE_URL = 'https://' + AUTH0_DOMAIN
 AUTH0_AUDIENCE = env.get(constants.AUTH0_AUDIENCE)
+ENV_VARS = {
+    "PLAID_CLIENT_ID": env.get(constants.PLAID_CLIENT_ID),
+    "PLAID_PUBLIC_KEY": env.get(constants.PLAID_PUBLIC_KEY),
+    "PLAID_SECRET": env.get(constants.PLAID_SECRET),
+    "PLAID_ENV": env.get(constants.PLAID_ENV)
+}
 
+# setup plaid client
+# client = Client(
+#     ENV_VARS["PLAID_CLIENT_ID"],
+#     ENV_VARS["PLAID_SECRET"],
+#     ENV_VARS["PLAID_PUBLIC_KEY"],
+#     ENV_VARS["PLAID_ENV"],
+# )
+
+# setup application
 application = Flask(__name__, static_url_path='/public', static_folder='./public')
 application.secret_key = constants.SECRET_KEY
 application.debug = True
@@ -133,15 +157,69 @@ def dashboard() -> render_template:
     Render to dashboard.html
     :return: function render_template('dashboard.html', userinfo, userinfo_pretty)
     """
+    # user info
+    user_info = session[constants.PROFILE_KEY],
+    user_info_pretty_str = json.dumps(session[constants.JWT_PAYLOAD], indent=4)
+    user_info_pretty_dict = session[constants.JWT_PAYLOAD]
+
+    # connect to database
+    engine = db.create_engine(
+        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
+    connection = engine.connect()
+
+    # check if sign up
+    signup_flag = False
+    check_signup = connection.execute("SELECT auth_id FROM dw.user WHERE auth_id = '" + user_info[0]['user_id'] + "'")
+    if len(check_signup.fetchall()) > 0:  # if there is something in the signup object
+        print('signed up already')
+        signup_flag = True
+
+    # signup: insert user info to database
+    if not signup_flag:
+        connection.execute("insert into dw.user values (" +
+                           "default, " +  # user_id
+                           "'" + user_info[0]['user_id'] + "', " +  # auth_id
+                           "'" + user_info_pretty_dict['given_name'] + "', " +  # first_name
+                           "'" + user_info_pretty_dict['family_name'] + "', " +  # last_name
+                           "'" + user_info_pretty_dict['email'] + "', " +  # email
+                           "'4157678665', " +  # phone
+                           "'01/01/2020', " +  # signup_date
+                           "'Activate'" +  # status
+                           ");")
+
+    # show the user's transactions
+    show_transaction = connection.execute("SELECT * FROM dw.user")
+    for row in show_transaction:
+        print('transaction: ', row)
+
+    # show user info
     return render_template('dashboard.html',
-                           userinfo=session[constants.PROFILE_KEY],
-                           userinfo_pretty=json.dumps(session[constants.JWT_PAYLOAD], indent=4))
+                           userinfo=user_info[0],
+                           userinfo_pretty=user_info_pretty_str)
+
+
+# @application.route("/access_token", methods=["POST"])
+# def access_token():
+#     public_token = request.form["public_token"]
+#     try:
+#         response = token_exchange(client, public_token)
+#         print('response: ', response)
+#     except ItemError as e:
+#         outstring = f"Failure: {e.code}"
+#         print(outstring)
+#         return outstring
+#     return render_template(
+#         "dashboard.html",
+#         plaid_public_key=client.public_key,
+#         plaid_environment=client.environment,
+#         plaid_products=ENV_VARS.get("PLAID_PRODUCTS", "transactions"),
+#         plaid_country_codes=ENV_VARS.get("PLAID_COUNTRY_CODES", "US"),
+#     )
 
 
 if __name__ == "__main__":
     # testing local
-    # application.run(host='0.0.0.0', port=env.get('PORT', 3000))
+    application.run(host='0.0.0.0', port=env.get('PORT', 3000))
 
     # deployment
-    application.run(debug=True, port=5000)
-
+    # application.run(debug=True, port=5000)
