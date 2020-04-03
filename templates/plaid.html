@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Impulses</title>
+</head>
+
+<body>
+<form id='plaid-link-form' action={{url_for('access_token')}} method="post">
+</form>
+<script
+    src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"
+    data-client-name="My App"
+    data-form-id="plaid-link-form"
+    data-key="{{plaid_public_key}}"
+    data-product="{{plaid_products}}"
+    data-env="{{plaid_environment}}">
+</script>
+
+</body>
+</html>

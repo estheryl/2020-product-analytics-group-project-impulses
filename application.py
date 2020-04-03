@@ -163,15 +163,10 @@ def dashboard() -> render_template:
     user_info_pretty_str = json.dumps(session[constants.JWT_PAYLOAD], indent=4)
     user_info_pretty_dict = session[constants.JWT_PAYLOAD]
 
-    # connect to database
-    engine = db.create_engine(
-        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
-    connection = engine.connect()
-
     # check if sign up
     signup_flag = False
-    check_signup = connection.execute("SELECT auth_id FROM dw.user WHERE auth_id = '" + user_info[0]['user_id'] + "'")
-    if len(check_signup.fetchall()) > 0:  # if there is something in the signup object
+    signup_obj = connection.execute("SELECT auth_id FROM dw.user WHERE auth_id = '" + user_info[0]['user_id'] + "'")
+    if len(signup_obj.fetchall()) > 0:  # if there is something in the signup object
         print('signed up already')
         signup_flag = True
 
@@ -187,6 +182,24 @@ def dashboard() -> render_template:
                            "'01/01/2020', " +  # signup_date
                            "'Activate'" +  # status
                            ");")
+
+    # get the user_id in dw.user
+    user_id_obj = connection.execute(
+        "SELECT user_id FROM dw.user WHERE auth_id = '" + user_info[0]['user_id'] + "'")
+    user_id = str(user_id_obj.first()[0])
+
+    # check if signed up in plaid
+    signup_flag = False
+    signup_obj = connection.execute(
+        "SELECT access_token, item_id FROM dw.plaid_items WHERE user_id = " + user_id)
+    signup_dict = signup_obj.fetchone()
+    if len(signup_dict) > 0:  # if there is something in the signup object
+        print('plaid signed up already')
+        signup_flag = True
+        access_token = signup_dict['access_token']
+        item_id = signup_dict['item_id']
+        print('dashboard access_token: ', access_token)
+        print('dashboard item_id: ', item_id)
 
     # show the user's transactions
     show_transaction = connection.execute("SELECT * FROM dw.user")
@@ -208,16 +221,50 @@ def dashboard() -> render_template:
 def access_token():
     public_token = request.form["public_token"]
     try:
-        response = token_exchange(client, public_token)
-        print('response: ', response)
+        # user info
+        user_info = session[constants.PROFILE_KEY]
+        user_info_pretty_str = json.dumps(session[constants.JWT_PAYLOAD], indent=4)
 
-        # TODO: store the response into our database
+        # get the user_id in dw.user
+        user_id_obj = connection.execute(
+            "SELECT user_id FROM dw.user WHERE auth_id = '" + user_info['user_id'] + "'")
+        user_id = str(user_id_obj.first()[0])
+
+        # check if signed up in plaid
+        signup_flag = False
+        signup_obj = connection.execute(
+            "SELECT access_token, item_id FROM dw.plaid_items WHERE user_id = " + user_id)
+        signup_dict = signup_obj.fetchone()
+        if len(signup_dict) > 0:  # if there is something in the signup object
+            print('plaid signed up already')
+            signup_flag = True
+            access_token = signup_dict['access_token']
+            item_id = signup_dict['item_id']
+            print('access_token: ', access_token)
+            print('item_id: ', item_id)
+
+        # signup: insert plaid info to database
+        if not signup_flag:
+            # get the plaid token response
+            response = token_exchange(client, public_token)
+            print('response: ', response)
+
+            connection.execute("insert into dw.plaid_items values (" +
+                               "default, " +  # plaid_id
+                               "'" + user_id + "', " +  # user_id
+                               "'" + response['item_id'] + "', " +  # item_id
+                               "'" + response['access_token'] + "'" +  # access_token
+                               ");")
 
     except ItemError as e:
         outstring = f"Failure: {e.code}"
         print(outstring)
         return outstring
+
+    # return redirect(url_for('dashboard'))
     return render_template('dashboard.html',
+                           userinfo=user_info,
+                           userinfo_pretty=user_info_pretty_str,
                            plaid_public_key=client.public_key,
                            plaid_environment=client.environment,
                            plaid_products=ENV_VARS.get("PLAID_PRODUCTS", "transactions"),
@@ -226,6 +273,11 @@ def access_token():
 
 
 if __name__ == "__main__":
+    # connect to database
+    engine = db.create_engine(
+        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
+    connection = engine.connect()
+
     # testing local
     application.run(host='0.0.0.0', port=env.get('PORT', 3000))
 
