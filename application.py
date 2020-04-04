@@ -57,11 +57,6 @@ application = Flask(__name__, static_url_path='/public', static_folder='./public
 application.secret_key = constants.SECRET_KEY
 application.debug = True
 
-# connect to database
-engine = db.create_engine(
-    "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
-connection = engine.connect()
-
 
 @application.errorhandler(Exception)
 def handle_auth_error(ex: Exception) -> jsonify:
