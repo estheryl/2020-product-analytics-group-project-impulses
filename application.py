@@ -171,7 +171,7 @@ def dashboard() -> render_template:
     # check if sign up
     signup_flag = False
     signup_obj = connection.execute("SELECT auth_id FROM dw.user WHERE auth_id = '" + user_info[0]['user_id'] + "'")
-    if len(signup_obj.fetchall()) > 0:  # if there is something in the signup object
+    if signup_obj.fetchone():  # if there is something in the signup object
         print('signed up already')
         signup_flag = True
 
@@ -198,7 +198,7 @@ def dashboard() -> render_template:
     signup_obj = connection.execute(
         "SELECT access_token, item_id FROM dw.plaid_items WHERE user_id = " + user_id)
     signup_dict = signup_obj.fetchone()
-    if len(signup_dict) > 0:  # if there is something in the signup object
+    if signup_dict:  # if there is something in the signup dictionary
         print('plaid signed up already')
         signup_flag = True
         access_token = signup_dict['access_token']
@@ -247,7 +247,7 @@ def access_token():
         signup_obj = connection.execute(
             "SELECT access_token, item_id FROM dw.plaid_items WHERE user_id = " + user_id)
         signup_dict = signup_obj.fetchone()
-        if len(signup_dict) > 0:  # if there is something in the signup object
+        if signup_dict:  # if there is something in the signup dictionary
             print('plaid signed up already')
             signup_flag = True
             access_token = signup_dict['access_token']
