@@ -158,8 +158,10 @@ def dashboard() -> render_template:
     Render to dashboard.html
     :return: function render_template('dashboard.html', userinfo, userinfo_pretty)
     """
-    # get db connection
-    global connection
+    # connect to database
+    engine = db.create_engine(
+        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
+    connection = engine.connect()
 
     # user info
     user_info = session[constants.PROFILE_KEY],
@@ -222,11 +224,14 @@ def dashboard() -> render_template:
 
 @application.route("/access_token", methods=["POST"])
 def access_token():
-    # get db connection
-    global connection
+    # connect to database
+    engine = db.create_engine(
+        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
+    connection = engine.connect()
 
-    # access token
+    # get the public token from form
     public_token = request.form["public_token"]
+
     try:
         # user info
         user_info = session[constants.PROFILE_KEY]
@@ -280,13 +285,8 @@ def access_token():
 
 
 if __name__ == "__main__":
-    # connect to database
-    engine = db.create_engine(
-        "postgres+psycopg2://masteruser:" + DB_PASSWORD + "@maindb.cuwtgivgs05r.us-west-1.rds.amazonaws.com:5432/postgres")
-    connection = engine.connect()
-
     # testing local
     # application.run(host='0.0.0.0', port=env.get('PORT', 3000))
 
     # deployment
-    application.run(debug=True, port=5000)
+    application.run(threaded=True, debug=True, port=5000)
