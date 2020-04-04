@@ -158,6 +158,9 @@ def dashboard() -> render_template:
     Render to dashboard.html
     :return: function render_template('dashboard.html', userinfo, userinfo_pretty)
     """
+    # get db connection
+    global connection
+
     # user info
     user_info = session[constants.PROFILE_KEY],
     user_info_pretty_str = json.dumps(session[constants.JWT_PAYLOAD], indent=4)
@@ -219,6 +222,10 @@ def dashboard() -> render_template:
 
 @application.route("/access_token", methods=["POST"])
 def access_token():
+    # get db connection
+    global connection
+
+    # access token
     public_token = request.form["public_token"]
     try:
         # user info
