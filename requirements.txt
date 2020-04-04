@@ -10,4 +10,5 @@ python-dotenv==0.12.0
 requests==2.23.0
 authlib==0.14.1
 six==1.14.0
-psycopg2==2.8.4
+# psycopg2==2.8.4
+psycopg2-binary
