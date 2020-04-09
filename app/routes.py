@@ -80,7 +80,6 @@ def add_habit():
     user_id = current_user.id
 
     habit_form = classes.HabitForm()
-    print(habit_form.validate_on_submit())
     if habit_form.validate_on_submit():
         habit_name = habit_form.habit_name.data
         habit_category = habit_form.habit_category.data
@@ -118,6 +117,7 @@ def dashboard():
         transactions = get_transactions(client, '2019-10-01', '2019-11-01',
                                         access_token)
 
+    # find user habit
     habits = classes.Habits.query.filter_by(user_id=user_id).all()
 
     return render_template("dashboard.html",
@@ -147,6 +147,7 @@ def access_plaid_token():
 
         # check if signed up in plaid
         plaid_dict = classes.PlaidItems.query. \
+        plaid_dict = classes.PlaidItems.query.\
             filter_by(user_id=user_id).first()
         if plaid_dict:  # if signed up in plaid
             print('access_plaid_token: already signed up plaid')

@@ -227,7 +227,6 @@ class LogInForm(FlaskForm):
 
 class HabitForm(FlaskForm):
     """Class for habit formation form"""
-
     habit_name = StringField("Habit Name:", validators=[DataRequired()])
     habit_category = SelectField("Habit Category:",
                                  choices=[('coffee', 'Coffee'),
