@@ -181,12 +181,13 @@ class Habits(db.Model):
     """Data model for habits table.
 
     Columns include:
-    habits_id: auto increment primary key; bigint
-    user_id: id of the user that made the habit; bigint
+    habits_id: auto increment primary key; int
+    user_id: id of the user that made the habit; int
     habit_name: name of the habit user created; string
     habit_category: category of the habit; string
-    time_minute: minute of the reminder; bigint (0-59)
-    time_hour: hour of the reminder; bigint(0-23)
+    time_minute: minute of the reminder; string (0-59)
+    time_hour: hour of the reminder; string (0-23)
+    time_day_of_week: day_of_week; string ("1-5", "0,6", "*")
     """
     __tablename__ = "habits"
     id = db.Column("habits_id", db.Integer, primary_key=True)
@@ -195,17 +196,16 @@ class Habits(db.Model):
     habit_category = db.Column(db.String, nullable=False)
     time_minute = db.Column(db.String, nullable=False)
     time_hour = db.Column(db.String, nullable=False)
-
-    # time_day_of_week = db.Column(db.String, nullable=False)
+    time_day_of_week = db.Column(db.String, nullable=False)
 
     def __init__(self, user_id, habit_name, habit_category, time_minute,
-                 time_hour):
+                 time_hour, time_day_of_week):
         self.user_id = user_id
         self.habit_name = habit_name
         self.habit_category = habit_category
         self.time_minute = time_minute
         self.time_hour = time_hour
-        # self.time_day_of_week = time_day_of_week
+        self.time_day_of_week = time_day_of_week
 
 
 class RegistrationForm(FlaskForm):
@@ -227,20 +227,25 @@ class LogInForm(FlaskForm):
 
 class HabitForm(FlaskForm):
     """Class for habit formation form"""
+
     habit_name = StringField("Habit Name:", validators=[DataRequired()])
     habit_category = SelectField("Habit Category:",
-                                 choices=[('coffee', 'coffee'),
-                                          ('lunch', 'lunch')],
+                                 choices=[('coffee', 'Coffee'),
+                                          ('lunch', 'Lunch'),
+                                          ('ride_share', 'Ride Share')],
                                  validators=[DataRequired()])
     time_minute = SelectField("Minute:",
-                              choices=[('8', '8'), ('10', '10')],
+                              choices=[(str(i), str(i)) for i in
+                                       range(0, 60, 15)],
                               validators=[DataRequired()])
-    time_hour = SelectField("Hour:", choices=[('1', '1'), ('2', '2')],
+    time_hour = SelectField("Hour:",
+                            choices=[(str(i), str(i)) for i in range(24)],
                             validators=[DataRequired()])
-    # time_day_of_week = SelectField("Day Of Week:",
-    # choices=[('0', 'Weekdays'),
-    # ('1', 'Weekends'), ('2', 'Everyday')],
-    #                                validators=[DataRequired()])
+    time_day_of_week = SelectField("Day Of Week:",
+                                   choices=[('1-5', 'Mon - Fri'),
+                                            ('0,6', 'Weekends'),
+                                            ('*', 'Everyday')],
+                                   validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 

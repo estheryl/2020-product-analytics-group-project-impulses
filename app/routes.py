@@ -7,7 +7,6 @@ from plaid_methods.methods import get_accounts, get_transactions, \
     token_exchange
 from plaid import Client
 
-
 ENV_VARS = {
     "PLAID_CLIENT_ID": os.environ["PLAID_CLIENT_ID"],
     "PLAID_PUBLIC_KEY": os.environ["PLAID_PUBLIC_KEY"],
@@ -87,11 +86,11 @@ def add_habit():
         habit_category = habit_form.habit_category.data
         time_minute = habit_form.time_minute.data
         time_hour = habit_form.time_hour.data
-        # time_day_of_week = habit_form.time_day_of_week.data
-        # habit = classes.Habits(user_id, habit_name, habit_category,
-        # time_minute, time_hour, time_day_of_week)
+        time_day_of_week = habit_form.time_day_of_week.data
+
         habit = classes.Habits(user_id, habit_name, habit_category,
-                               time_minute, time_hour)
+                               time_minute, time_hour, time_day_of_week)
+
         db.session.add(habit)
         db.session.commit()
         return redirect(url_for("dashboard"))
@@ -119,7 +118,6 @@ def dashboard():
         transactions = get_transactions(client, '2019-10-01', '2019-11-01',
                                         access_token)
 
-    # find user habit
     habits = classes.Habits.query.filter_by(user_id=user_id).all()
 
     return render_template("dashboard.html",
@@ -148,7 +146,7 @@ def access_plaid_token():
         user_id = current_user.id
 
         # check if signed up in plaid
-        plaid_dict = classes.PlaidItems.query.\
+        plaid_dict = classes.PlaidItems.query. \
             filter_by(user_id=user_id).first()
         if plaid_dict:  # if signed up in plaid
             print('access_plaid_token: already signed up plaid')
