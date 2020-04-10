@@ -1,4 +1,6 @@
 import os
+import json
+import subprocess
 from app import application, classes, db
 from flask import redirect, render_template, url_for, request
 from flask_login import current_user, login_user, login_required, logout_user
@@ -171,3 +173,17 @@ def access_plaid_token():
         return outstring
 
     return redirect(url_for("dashboard"))
+
+@application.route("/create_topic", methods=["POST", "GET"])
+def create_topic():
+    topic_name = 'impulses-customer_1'
+    subprocess.call(['bash','aws sns create-topic \
+                    --name $1 > data/arn.json', topic_name])
+
+# @application.route("/publish_message", methods=["POST", "GET"])
+# def publish_message():
+    # topic_name = 'impulses-customer'
+    # topic_arn = 'arn:aws:sns:us-west-2:941468269564:impulses-customer'
+    # protocal = 'sms'
+    # message = 'file://messages/message.txt'
+    # message = 'leishoua'

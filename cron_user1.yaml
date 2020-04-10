@@ -1,0 +1,5 @@
+version: 1
+cron:
+  - name: "create_topic"
+    url: "/create_topic"
+    schedule: "* * * * *"

@@ -1,0 +1,8 @@
+{
+    "ApplicationResponse": {
+        "Arn": "arn:aws:mobiletargeting:us-west-2:941468269564:apps/e74468c72fab4e99b8c63539e287b0a4",
+        "Id": "e74468c72fab4e99b8c63539e287b0a4",
+        "Name": "impulses",
+        "tags": {}
+    }
+}

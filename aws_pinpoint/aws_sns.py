@@ -5,8 +5,10 @@ topic_name = 'impulses-customer'
 topic_arn = 'arn:aws:sns:us-west-2:941468269564:impulses-customer'
 protocal = 'sms'
 message = 'file://messages/message.txt'
+message = 'leishoua'
 #phone_numbers = ['+1-702-505-6593','+1-415-819-2258','+1-415-767-8665','+1-615-483-1195','+1-336-782-0775']
-phone_numbers = ['+1-415-819-2258']
+#phone_numbers = ['+1-415-819-2258']
+phone_numbers = ['+1-415-370-2693']
 
 def create_topic(topic_name):
 	subprocess.call(['bash','aws_cli/aws_create_topic.sh', topic_name])
@@ -28,5 +30,5 @@ if __name__ == '__main__':
 		subscribe(phone_number)
 		opt_in(phone_number)
 		publish(phone_number)
-
+		publish(phone_number)
 
