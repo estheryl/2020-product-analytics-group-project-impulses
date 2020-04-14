@@ -6,13 +6,19 @@ from plaid.errors import ItemError
 from plaid_methods.methods import get_accounts, get_transactions, \
     token_exchange
 from plaid import Client
+import twilio
+import twilio.rest
+from twilio import twiml
+from twilio.twiml.messaging_response import MessagingResponse
 
 
 ENV_VARS = {
     "PLAID_CLIENT_ID": os.environ["PLAID_CLIENT_ID"],
     "PLAID_PUBLIC_KEY": os.environ["PLAID_PUBLIC_KEY"],
     "PLAID_SECRET": os.environ["PLAID_SECRET"],
-    "PLAID_ENV": os.environ["PLAID_ENV"]
+    "PLAID_ENV": os.environ["PLAID_ENV"],
+    "TWILIO_ACCOUNT_SID": os.environ["TWILIO_ACCOUNT_SID"],
+    "TWILIO_AUTH_TOKEN": os.environ["TWILIO_AUTH_TOKEN"]
 }
 
 # setup plaid client
@@ -22,6 +28,11 @@ client = Client(
     ENV_VARS["PLAID_PUBLIC_KEY"],
     ENV_VARS["PLAID_ENV"],
 )
+
+# setup twilio client
+twilio_client = twilio.rest.Client(
+    ENV_VARS["TWILIO_ACCOUNT_SID"],
+    ENV_VARS["TWILIO_AUTH_TOKEN"])
 
 
 @application.route("/index")
@@ -171,3 +182,33 @@ def access_plaid_token():
         return outstring
 
     return redirect(url_for("dashboard"))
+
+@application.route("/send_message")
+def send_message():
+    twilio_number="+16462573594"
+    customer_number="+14158192258"
+    body="Would you like to save $5 today, please respond Y/N :)"
+    
+    msg = twilio_client.messages.create(
+        body=body,
+        to=customer_number,
+        from_=twilio_number)
+    return redirect(url_for("index"))
+
+@application.route("/incoming", methods=["POST"])
+def receive_message():
+    number = request.form['From']
+    response = request.form['Body']
+
+    resp = MessagingResponse()
+    resp.message(f"Hi, {number} Thanks for you response {response}")
+    return str(resp)
+
+@application.route("/yes", methods=["POST"])
+def yes():
+    pass
+
+@application.route("/no", methods=["POST"])
+def no():
+    pass
+
