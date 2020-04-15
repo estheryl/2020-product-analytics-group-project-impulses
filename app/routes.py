@@ -183,7 +183,7 @@ def access_plaid_token():
 
     return redirect(url_for("dashboard"))
 
-@application.route("/send_message")
+@application.route("/send_message", methods=['GET', 'POST'])
 def send_message():
     twilio_number="+16462573594"
     customer_number="+14158192258"
