@@ -1,5 +1,5 @@
-version: 1
-cron:
-  - name: "send_message"
-    url: "/send_message"
-    schedule: "5 * * * *"
+# version: 1
+# cron:
+#   - name: "send_message"
+#     url: "/send_message"
+#     schedule: "*/5 * * * *"
