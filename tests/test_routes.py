@@ -32,6 +32,7 @@ class TestRoutes(unittest.TestCase):
     # Route Tests
     ####################################################################
     def test_main_page_not_logged_in(self):
+        """Test if main page is logged in"""
         response = self.app.get('/', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
 
@@ -108,6 +109,18 @@ class TestRoutes(unittest.TestCase):
         with self.app as c:
             response = self.app.post('/register', data=data)
             self.assertEqual(response.location, None)
+
+    def test_dashboard_add_habit(self)
+        """Test if new habits can be added on dashboard through flask form"""
+        # add habit to db
+        habit_data = {'habit_name': 'test_habit',
+                      'habit_category': 'Coffee',
+                      'time_minute': '15',
+                      'time_hour': '8',
+                      'time_day_of_week': '1-5'}
+        with self.app as c:
+            response = self.app.post('/dashboard', data=habit_data)
+            self.assertTrue(response.location.endswith('dashboard'))
 
 
 if __name__ == "__main__":

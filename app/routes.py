@@ -11,7 +11,6 @@ import twilio.rest
 from twilio import twiml
 from twilio.twiml.messaging_response import MessagingResponse
 
-
 ENV_VARS = {
     "PLAID_CLIENT_ID": os.environ["PLAID_CLIENT_ID"],
     "PLAID_PUBLIC_KEY": os.environ["PLAID_PUBLIC_KEY"],
@@ -38,6 +37,7 @@ twilio_client = twilio.rest.Client(
 @application.route("/index")
 @application.route("/")
 def index():
+    """Flask index page"""
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
     return render_template("home.html")
@@ -45,6 +45,7 @@ def index():
 
 @application.route("/login", methods=["GET", "POST"])
 def login():
+    """Flask login page"""
     if current_user.is_authenticated:
         return redirect(url_for("index"))
     login_form = classes.LogInForm()
@@ -62,6 +63,7 @@ def login():
 
 @application.route("/register", methods=["POST", "GET"])
 def register():
+    """Flask register page"""
     registration_form = classes.RegistrationForm()
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
@@ -88,6 +90,8 @@ def register():
 @application.route("/dashboard", methods=["POST", "GET"])
 @login_required
 def dashboard():
+    """Flask dashboard page,
+    includes three tabs: Transaction, Habits, Account"""
     # default transactions
     transactions = ''
 
@@ -111,9 +115,7 @@ def dashboard():
     user_id = current_user.id
 
     habit_form = classes.HabitForm()
-    print(habit_form.validate_on_submit())
     if habit_form.validate_on_submit():
-        print('a')
         habit_name = habit_form.habit_name.data
         habit_category = habit_form.habit_category.data
         time_minute = habit_form.time_minute.data
@@ -144,19 +146,20 @@ def dashboard():
 
 @application.route("/logout")
 def logout():
+    """Flask log out page"""
     logout_user()
     return redirect(url_for("index"))
 
 
 @application.route("/access_plaid_token", methods=["POST"])
 def access_plaid_token():
-
+    """Flask page for connecting users plaid item"""
     try:
         # get user session
         user_id = current_user.id
 
         # check if signed up in plaid
-        plaid_dict = classes.PlaidItems.query.\
+        plaid_dict = classes.PlaidItems.query. \
             filter_by(user_id=user_id).first()
         if plaid_dict:  # if signed up in plaid
             print('access_plaid_token: already signed up plaid')
@@ -183,20 +186,24 @@ def access_plaid_token():
 
     return redirect(url_for("dashboard"))
 
+
 @application.route("/send_message", methods=['GET', 'POST'])
 def send_message():
-    twilio_number="+16462573594"
-    customer_number="+14158192258"
-    body="Would you like to save $5 today, please respond Y/N :)"
-    
+    """Call this function when sending message notification to user"""
+    twilio_number = "+16462573594"
+    customer_number = "+14158192258"
+    body = "Would you like to save $5 today, please respond Y/N :)"
+
     msg = twilio_client.messages.create(
         body=body,
         to=customer_number,
         from_=twilio_number)
     return redirect(url_for("index"))
 
+
 @application.route("/incoming", methods=["POST"])
 def receive_message():
+    """Update user's response to text notification into db"""
     number = request.form['From']
     response = request.form['Body']
 
@@ -204,11 +211,12 @@ def receive_message():
     resp.message(f"Hi, {number} Thanks for you response {response}")
     return str(resp)
 
+
 @application.route("/yes", methods=["POST"])
 def yes():
     pass
 
+
 @application.route("/no", methods=["POST"])
 def no():
     pass
-
