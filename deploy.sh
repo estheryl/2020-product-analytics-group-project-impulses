@@ -12,7 +12,8 @@ environment_name=impulse-diane
 # pipeline_name=Impulses_deploy 
 # Used to test process with our own credentials
 # jsonfile=file://pipeline_master.json
-jsonfile=file://pipeline_diane.json
+# jsonfile=file://pipeline_diane.json
+jsonfile=file://pipeline_zhentao.json
 
 #### Initializing EBS ####
 #				User needs to have awsebcli installed
@@ -25,7 +26,7 @@ eb init $application_name -p python-3.6
 #### Creating EBS Environment (EC2 instance) ####
 # 				This will host our webserver
 # working
-eb create $environment_name
+eb create $environment_name 
 
 #### Create Codepipeline ####
 #				This will create an aws codepipeline that connect the

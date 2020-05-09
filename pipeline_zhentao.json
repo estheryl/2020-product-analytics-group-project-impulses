@@ -1,10 +1,10 @@
 {
     "pipeline": {
-        "name": "Deploy",
-        "roleArn": "arn:aws:iam::941468269564:role/service-role/AWSCodePipelineServiceRole-us-west-2-Impulses",
+        "name": "Impulses_deploy",
+        "roleArn": "arn:aws:iam::122292370660:role/service-role/AWSCodePipelineServiceRole-us-west-2-impulse-test",
         "artifactStore": {
             "type": "S3",
-            "location": "codepipeline-us-west-2-674950055712"
+            "location": "codepipeline-us-west-2-323512209564"
         },
         "stages": [
             {
